@@ -43,7 +43,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/truemedicine/mermaid-vibes"
+    "url": "git+https://github.com/truemedicine/mermaid-vibes.git"
   },
   "bugs": {
     "url": "https://github.com/truemedicine/mermaid-vibes/issues"
