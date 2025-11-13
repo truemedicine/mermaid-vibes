@@ -1,0 +1,402 @@
+/**
+ * Styles for the MermaidRenderer Component
+ *
+ * This stylesheet provides animated effects for Mermaid diagrams including:
+ * - Glowing nodes with pulsing animations
+ * - Pulsing arrows with color transitions
+ * - Animated light particles
+ * - Dark theme with gradient backgrounds
+ */
+
+/* ==========================================================================
+   Container & Layout
+   ========================================================================== */
+
+.mermaid-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  background: linear-gradient(135deg, #F7F6F2 0%, #F4FFFB 50%, #F7F6F2 100%);
+  border-radius: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated background gradient */
+.mermaid-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(23, 152, 149, 0.05) 0%, transparent 70%);
+  animation: rotate 20s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.mermaid-renderer {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 0;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.mermaid-renderer svg {
+  max-width: 100%;
+  max-height: 100%;
+  height: auto;
+  width: 100%;
+  filter: drop-shadow(0 0 15px rgba(23, 152, 149, 0.15));
+  /* Prevent filter animations from causing layout shifts */
+  will-change: filter;
+}
+
+/* ==========================================================================
+   Animated Nodes (Boxes, Circles, etc.)
+   ========================================================================== */
+
+.animated-node {
+  fill: rgba(255, 255, 255, 0.95) !important;
+  stroke: #179895 !important;
+  stroke-width: 3 !important;
+  filter: drop-shadow(0 0 8px rgba(23, 152, 149, 0.2));
+  animation: nodeGlow 4s ease-in-out infinite;
+  transition: filter 0.2s ease;
+  /* Use GPU acceleration */
+  transform: translateZ(0);
+  will-change: auto;
+}
+
+.animated-node:hover {
+  fill: rgba(244, 255, 251, 1) !important;
+  stroke: #679b9a !important;
+  stroke-width: 3.5 !important;
+  filter: drop-shadow(0 0 10px rgba(23, 152, 149, 0.3));
+}
+
+@keyframes nodeGlow {
+  0%, 100% {
+    opacity: 0.95;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ==========================================================================
+   Animated Edges (Arrows)
+   ========================================================================== */
+
+.animated-edge {
+  stroke: #179895 !important;
+  stroke-width: 4 !important;
+  stroke-linecap: butt !important;
+  fill: none !important;
+  filter: drop-shadow(0 0 4px rgba(23, 152, 149, 0.2));
+  animation: edgePulse 3s ease-in-out infinite;
+  /* Use GPU acceleration */
+  transform: translateZ(0);
+  will-change: auto;
+}
+
+@keyframes edgePulse {
+  0%, 100% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Arrow markers (arrowheads) */
+.animated-marker path,
+marker path {
+  fill: #179895 !important;
+  stroke: none !important;
+  filter: drop-shadow(0 0 3px rgba(23, 152, 149, 0.25));
+  animation: markerPulse 3s ease-in-out infinite;
+  transform: translateZ(0);
+}
+
+@keyframes markerPulse {
+  0%, 100% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ==========================================================================
+   Particle System
+   ========================================================================== */
+
+.particle-layer {
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* Main particle core */
+.edge-particle {
+  filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.5))
+          drop-shadow(0 0 6px rgba(96, 165, 250, 0.3));
+  /* Opacity controlled by JavaScript for fade in/out */
+}
+
+/* White center sparkle */
+.particle-inner-glow {
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.6))
+          drop-shadow(0 0 3px rgba(255, 255, 255, 0.4));
+  /* Opacity controlled by JavaScript for fade in/out */
+}
+
+/* Soft outer halo */
+.particle-outer-glow {
+  filter: blur(5px);
+  animation: particleHaloPulse 3s ease-in-out infinite;
+}
+
+@keyframes particleHaloPulse {
+  0%, 100% {
+    r: 10;
+  }
+  50% {
+    r: 11;
+  }
+}
+
+/* ==========================================================================
+   Labels
+   ========================================================================== */
+
+.animated-label {
+  fill: #1A202C !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  text-shadow: none;
+  font-family: "PP Neue Montreal", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif !important;
+  /* Static, no animation to prevent overlapping */
+}
+
+/* Node labels (text inside boxes) */
+.nodeLabel,
+.nodeLabel * {
+  color: #1A202C !important;
+  fill: #1A202C !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  font-family: "PP Neue Montreal", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif !important;
+}
+
+/* Edge labels (Yes/No decision labels) */
+.edgeLabel {
+  background: transparent !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+.edgeLabel rect {
+  min-width: 80px !important;
+  min-height: 45px !important;
+  rx: 12px !important;
+  ry: 12px !important;
+  fill: #FFFFFF !important;
+  stroke: none !important;
+  stroke-width: 0 !important;
+  filter: none !important;
+}
+
+.edgeLabel text,
+.edgeLabel * {
+  color: #1A202C !important;
+  fill: #1A202C !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  font-family: "PP Neue Montreal", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif !important;
+}
+
+/* ==========================================================================
+   Diagram-Specific Enhancements
+   ========================================================================== */
+
+/* Clusters (subgraphs) */
+.cluster rect {
+  fill: rgba(244, 255, 251, 0.5) !important;
+  stroke: #179895 !important;
+  stroke-width: 2.5 !important;
+  rx: 12 !important;
+  filter: drop-shadow(0 0 6px rgba(23, 152, 149, 0.15));
+}
+
+/* Flowchart links */
+.flowchart-link {
+  stroke: #179895 !important;
+  stroke-width: 4 !important;
+  stroke-linecap: butt !important;
+  animation: edgePulse 3s ease-in-out infinite;
+  transform: translateZ(0);
+}
+
+/* Class diagram boxes */
+.classGroup rect {
+  fill: rgba(255, 255, 255, 0.95) !important;
+  stroke: #179895 !important;
+  stroke-width: 3 !important;
+}
+
+/* State diagram boxes */
+.stateGroup rect {
+  fill: rgba(255, 255, 255, 0.95) !important;
+  stroke: #179895 !important;
+  stroke-width: 3 !important;
+}
+
+/* Sequence diagram actors */
+.actor {
+  fill: rgba(255, 255, 255, 0.95) !important;
+  stroke: #179895 !important;
+  stroke-width: 4 !important;
+  rx: 16 !important;
+  ry: 16 !important;
+  filter: drop-shadow(0 0 10px rgba(23, 152, 149, 0.25))
+          drop-shadow(0 0 15px rgba(23, 152, 149, 0.15));
+}
+
+.actor-man line,
+.actor-man circle {
+  stroke: #179895 !important;
+  stroke-width: 3.5 !important;
+  fill: #FFFFFF !important;
+}
+
+/* Actor labels */
+.actor text,
+.actor-label,
+.actor tspan {
+  fill: #1A202C !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  font-family: "PP Neue Montreal", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif !important;
+}
+
+/* Support for logos/icons in actor boxes */
+.actor image {
+  border-radius: 8px;
+}
+
+/* Sequence diagram message lines */
+.messageLine0,
+.messageLine1 {
+  stroke: #179895 !important;
+  stroke-width: 5 !important;
+  stroke-linecap: butt !important;
+  animation: edgePulse 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px rgba(23, 152, 149, 0.25));
+  transform: translateZ(0);
+}
+
+/* Sequence diagram message labels */
+.messageText,
+.loopText,
+.loopLabel {
+  fill: #1A202C !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  font-family: "PP Neue Montreal", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif !important;
+}
+
+/* Sequence diagram activation boxes */
+.activation0,
+.activation1,
+.activation2 {
+  fill: rgba(23, 152, 149, 0.15) !important;
+  stroke: #179895 !important;
+  stroke-width: 3.5 !important;
+}
+
+/* Sequence diagram note boxes */
+.note {
+  fill: #FFFFFF !important;
+  stroke: #679b9a !important;
+  stroke-width: 3.5 !important;
+  rx: 12 !important;
+  ry: 12 !important;
+}
+
+.noteText {
+  fill: #1A202C !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  font-family: "PP Neue Montreal", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif !important;
+}
+
+/* Gantt chart tasks */
+.task {
+  fill: rgba(23, 152, 149, 0.6) !important;
+  stroke: #179895 !important;
+  stroke-width: 2.5 !important;
+}
+
+.taskText {
+  fill: #1A202C !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  font-family: "PP Neue Montreal", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif !important;
+}
+
+/* Git graph elements */
+.commit-id,
+.commit-msg,
+.branch-label {
+  fill: #1A202C !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  font-family: "PP Neue Montreal", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif !important;
+}
+
+/* ==========================================================================
+   Responsive Design
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .mermaid-container {
+    padding: 2rem;
+  }
+
+  .animated-node {
+    stroke-width: 2.5 !important;
+  }
+
+  .animated-edge {
+    stroke-width: 2.5 !important;
+  }
+
+  .nodeLabel,
+  .nodeLabel * {
+    font-size: 14px !important;
+  }
+
+  .edgeLabel text,
+  .edgeLabel * {
+    font-size: 13px !important;
+  }
+}
