@@ -58,10 +58,12 @@ export async function exportAsSVG(
 
 /**
  * Converts an image URL to a data URI
+ * Uses a proxy approach to avoid CORS issues
  */
 async function urlToDataUri(url: string): Promise<string> {
   try {
-    const response = await fetch(url);
+    // Try direct fetch with cors mode first
+    const response = await fetch(url, { mode: 'cors' });
     const blob = await response.blob();
     return new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
@@ -70,9 +72,49 @@ async function urlToDataUri(url: string): Promise<string> {
       reader.readAsDataURL(blob);
     });
   } catch (error) {
-    console.warn('Failed to convert image to data URI:', url, error);
-    return url; // Return original URL as fallback
+    console.warn('Failed to convert image to data URI via fetch:', url, error);
+
+    // Fallback: Try loading via Image element (can bypass some CORS restrictions)
+    try {
+      return await loadImageAsDataUri(url);
+    } catch (imgError) {
+      console.error('Failed to load image via Image element:', url, imgError);
+      // Return a transparent 1x1 pixel as final fallback
+      return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    }
   }
+}
+
+/**
+ * Loads an image via Image element and converts to data URI
+ * This can sometimes work when fetch fails due to CORS
+ */
+async function loadImageAsDataUri(url: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous'; // Request CORS
+
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Failed to get canvas context'));
+          return;
+        }
+        ctx.drawImage(img, 0, 0);
+        const dataUri = canvas.toDataURL('image/png');
+        resolve(dataUri);
+      } catch (error) {
+        reject(error);
+      }
+    };
+
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = url;
+  });
 }
 
 /**

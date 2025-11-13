@@ -75,12 +75,17 @@ export function enhanceEdgeLabelBoxes(svgElement: SVGSVGElement): void {
  * Mermaid uses different class names for different diagram types
  */
 export function findEdgePaths(svgElement: SVGSVGElement): NodeListOf<Element> | Element[] {
-  // Try each selector in order of priority
+  // Collect all matching edges from all selectors (don't stop at first match)
+  const edgeSet = new Set<Element>();
+
   for (const selector of MERMAID_SELECTORS.edges) {
     const edges = svgElement.querySelectorAll(selector);
-    if (edges.length > 0) {
-      return edges;
-    }
+    edges.forEach(edge => edgeSet.add(edge));
+  }
+
+  // If we found edges using selectors, return them
+  if (edgeSet.size > 0) {
+    return Array.from(edgeSet);
   }
 
   // Fallback: find all paths that are NOT part of nodes or markers

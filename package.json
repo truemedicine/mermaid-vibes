@@ -1,6 +1,6 @@
 {
   "name": "mermaid-vibes",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Vibe-coded Mermaid diagrams for React with buttery animations and aesthetic appeal",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

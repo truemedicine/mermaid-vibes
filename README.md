@@ -2,8 +2,12 @@
 
 Vibe-coded Mermaid diagrams for React with buttery animations.
 
+![Mermaid Vibes Demo](./assets/mermaid-vibes-demo.jpg)
+
+## Installation
+
 ```bash
-npm install @truemed/mermaid-vibes mermaid
+npm install mermaid-vibes mermaid
 ```
 
 ## Quick Start

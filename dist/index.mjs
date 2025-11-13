@@ -132,8 +132,11 @@ var MERMAID_SELECTORS = {
     ".flowchart-link",
     ".messageLine0",
     ".messageLine1",
+    ".messageLine0.dashed",
+    ".messageLine1.dashed",
     ".edgePath path",
-    "path.edge"
+    "path.edge",
+    "path.relation"
   ],
   edgeLabels: ".edgeLabel",
   edgeLabelRects: ".edgeLabel rect"};
@@ -187,11 +190,13 @@ function enhanceEdgeLabelBoxes(svgElement) {
   });
 }
 function findEdgePaths(svgElement) {
+  const edgeSet = /* @__PURE__ */ new Set();
   for (const selector of MERMAID_SELECTORS.edges) {
     const edges = svgElement.querySelectorAll(selector);
-    if (edges.length > 0) {
-      return edges;
-    }
+    edges.forEach((edge) => edgeSet.add(edge));
+  }
+  if (edgeSet.size > 0) {
+    return Array.from(edgeSet);
   }
   const allPaths = svgElement.querySelectorAll("path");
   return Array.from(allPaths).filter((path) => {
@@ -412,7 +417,7 @@ async function exportAsSVG(svgElement, filename = "diagram.svg") {
 }
 async function urlToDataUri(url) {
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, { mode: "cors" });
     const blob = await response.blob();
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -421,9 +426,39 @@ async function urlToDataUri(url) {
       reader.readAsDataURL(blob);
     });
   } catch (error) {
-    console.warn("Failed to convert image to data URI:", url, error);
-    return url;
+    console.warn("Failed to convert image to data URI via fetch:", url, error);
+    try {
+      return await loadImageAsDataUri(url);
+    } catch (imgError) {
+      console.error("Failed to load image via Image element:", url, imgError);
+      return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+    }
   }
+}
+async function loadImageAsDataUri(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Failed to get canvas context"));
+          return;
+        }
+        ctx.drawImage(img, 0, 0);
+        const dataUri = canvas.toDataURL("image/png");
+        resolve(dataUri);
+      } catch (error) {
+        reject(error);
+      }
+    };
+    img.onerror = () => reject(new Error("Failed to load image"));
+    img.src = url;
+  });
 }
 async function inlineStyles(svgElement) {
   const svgClone = svgElement.cloneNode(true);
