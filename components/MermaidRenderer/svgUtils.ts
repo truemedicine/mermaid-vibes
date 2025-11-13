@@ -9,6 +9,7 @@ import { MERMAID_SELECTORS, EDGE_LABEL_MIN_SIZE } from './constants';
  */
 export function enhanceNodes(svgElement: SVGSVGElement): void {
   const nodes = svgElement.querySelectorAll(MERMAID_SELECTORS.nodes);
+
   nodes.forEach((node) => {
     node.classList.add('animated-node');
 
@@ -16,6 +17,12 @@ export function enhanceNodes(svgElement: SVGSVGElement): void {
     if (node.tagName === 'rect') {
       node.setAttribute('rx', '10');
       node.setAttribute('ry', '10');
+    }
+
+    // Fix polygon (diamond) positioning by normalizing transform
+    if (node.tagName === 'polygon') {
+      const currentTransform = node.getAttribute('transform') || '';
+      node.setAttribute('transform', `translate(0, 0) ${currentTransform}`);
     }
   });
 }
@@ -37,10 +44,27 @@ export function enhanceLabels(svgElement: SVGSVGElement): void {
  * (e.g., "Yes" and "No" labels on decision branches)
  */
 export function enhanceEdgeLabelBoxes(svgElement: SVGSVGElement): void {
-  const edgeLabelRects = svgElement.querySelectorAll(MERMAID_SELECTORS.edgeLabelRects);
+  // Use multiple selectors to catch all edge label backgrounds
+  const selectors = [
+    '.edgeLabel rect',
+    'g.edgeLabel rect',
+    '.labelBkg',
+    'rect.labelBkg'
+  ];
+
+  const allEdgeLabelRects: SVGRectElement[] = [];
+  selectors.forEach(selector => {
+    const rects = svgElement.querySelectorAll(selector);
+    rects.forEach(rect => {
+      if (!allEdgeLabelRects.includes(rect as SVGRectElement)) {
+        allEdgeLabelRects.push(rect as SVGRectElement);
+      }
+    });
+  });
+
   const { width: minWidth, height: minHeight, borderRadius } = EDGE_LABEL_MIN_SIZE;
 
-  edgeLabelRects.forEach((rect) => {
+  allEdgeLabelRects.forEach((rect) => {
     const width = parseFloat(rect.getAttribute('width') || '0');
     const height = parseFloat(rect.getAttribute('height') || '0');
 
@@ -64,9 +88,13 @@ export function enhanceEdgeLabelBoxes(svgElement: SVGSVGElement): void {
       rect.setAttribute('y', (y - (newHeight - height) / 2).toString());
     }
 
-    // Add rounded corners
+    // Add rounded corners and white background
     rect.setAttribute('rx', borderRadius.toString());
     rect.setAttribute('ry', borderRadius.toString());
+    rect.setAttribute('fill', '#FFFFFF');
+    rect.setAttribute('stroke', 'none');
+    rect.style.fill = '#FFFFFF';
+    rect.style.stroke = 'none';
   });
 }
 

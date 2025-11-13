@@ -78,6 +78,11 @@ var MERMAID_CONFIG = {
     nodeBorder: PRIMARY.teal,
     clusterBkg: ACCENT.cyanSoft,
     clusterBorder: PRIMARY.tealLight,
+    // Flowchart specific - edge labels
+    edgeLabelBackground: BACKGROUND.white,
+    labelBoxBorderColor: "transparent",
+    labelBoxBkgColor: BACKGROUND.white,
+    labelTextColor: TEXT.body,
     // Sequence diagram specific
     actorBkg: BACKGROUND.white,
     actorBorder: PRIMARY.teal,
@@ -138,8 +143,7 @@ var MERMAID_SELECTORS = {
     "path.edge",
     "path.relation"
   ],
-  edgeLabels: ".edgeLabel",
-  edgeLabelRects: ".edgeLabel rect"};
+  edgeLabels: ".edgeLabel"};
 var EDGE_LABEL_MIN_SIZE = {
   width: 90,
   height: 50,
@@ -156,6 +160,10 @@ function enhanceNodes(svgElement) {
       node.setAttribute("rx", "10");
       node.setAttribute("ry", "10");
     }
+    if (node.tagName === "polygon") {
+      const currentTransform = node.getAttribute("transform") || "";
+      node.setAttribute("transform", `translate(0, 0) ${currentTransform}`);
+    }
   });
 }
 function enhanceLabels(svgElement) {
@@ -166,9 +174,23 @@ function enhanceLabels(svgElement) {
   });
 }
 function enhanceEdgeLabelBoxes(svgElement) {
-  const edgeLabelRects = svgElement.querySelectorAll(MERMAID_SELECTORS.edgeLabelRects);
+  const selectors = [
+    ".edgeLabel rect",
+    "g.edgeLabel rect",
+    ".labelBkg",
+    "rect.labelBkg"
+  ];
+  const allEdgeLabelRects = [];
+  selectors.forEach((selector) => {
+    const rects = svgElement.querySelectorAll(selector);
+    rects.forEach((rect) => {
+      if (!allEdgeLabelRects.includes(rect)) {
+        allEdgeLabelRects.push(rect);
+      }
+    });
+  });
   const { width: minWidth, height: minHeight, borderRadius } = EDGE_LABEL_MIN_SIZE;
-  edgeLabelRects.forEach((rect) => {
+  allEdgeLabelRects.forEach((rect) => {
     const width = parseFloat(rect.getAttribute("width") || "0");
     const height = parseFloat(rect.getAttribute("height") || "0");
     const paddedMinWidth = minWidth + 20;
@@ -187,6 +209,10 @@ function enhanceEdgeLabelBoxes(svgElement) {
     }
     rect.setAttribute("rx", borderRadius.toString());
     rect.setAttribute("ry", borderRadius.toString());
+    rect.setAttribute("fill", "#FFFFFF");
+    rect.setAttribute("stroke", "none");
+    rect.style.fill = "#FFFFFF";
+    rect.style.stroke = "none";
   });
 }
 function findEdgePaths(svgElement) {
@@ -750,19 +776,48 @@ var MermaidVibes = ({
           ".flowchart-link, .messageLine0, .messageLine1, .edgePath path, path.edge"
         );
         const findEdgeLabel = (element) => {
-          var _a, _b, _c;
-          const labelElement = (_a = element.parentElement) == null ? void 0 : _a.querySelector(".edgeLabel text, .messageText");
-          if ((_b = labelElement == null ? void 0 : labelElement.textContent) == null ? void 0 : _b.trim()) {
-            return labelElement.textContent.trim();
+          var _a, _b, _c, _d;
+          const immediateParent = element.parentElement;
+          if (immediateParent) {
+            const labelsInParent = immediateParent.querySelectorAll(".edgeLabel text, .messageText");
+            const pathsInParent = immediateParent.querySelectorAll("path");
+            if (labelsInParent.length === 1 && pathsInParent.length === 1) {
+              const text = (_a = labelsInParent[0].textContent) == null ? void 0 : _a.trim();
+              if (text) return text;
+            }
           }
-          const parent = element.parentElement;
-          if (parent) {
-            const labels = parent.querySelectorAll(".edgeLabel text, .messageText");
-            for (const label of labels) {
-              if ((_c = label.textContent) == null ? void 0 : _c.trim()) {
-                return label.textContent.trim();
+          if (immediateParent) {
+            const siblings = Array.from(immediateParent.children);
+            const currentIndex = siblings.indexOf(element);
+            for (let i = Math.max(0, currentIndex - 2); i < Math.min(siblings.length, currentIndex + 3); i++) {
+              const sibling = siblings[i];
+              if (sibling.classList.contains("edgeLabel")) {
+                const text = (_c = (_b = sibling.querySelector("text")) == null ? void 0 : _b.textContent) == null ? void 0 : _c.trim();
+                if (text) return text;
               }
             }
+          }
+          const edgeBBox = element.getBoundingClientRect();
+          const allLabels = svgElement.querySelectorAll(".edgeLabel, .messageText");
+          let closestLabel = null;
+          let closestDistance = Infinity;
+          allLabels.forEach((label) => {
+            const labelBBox = label.getBoundingClientRect();
+            const edgeCenterX = edgeBBox.left + edgeBBox.width / 2;
+            const edgeCenterY = edgeBBox.top + edgeBBox.height / 2;
+            const labelCenterX = labelBBox.left + labelBBox.width / 2;
+            const labelCenterY = labelBBox.top + labelBBox.height / 2;
+            const distance = Math.sqrt(
+              Math.pow(edgeCenterX - labelCenterX, 2) + Math.pow(edgeCenterY - labelCenterY, 2)
+            );
+            if (distance < closestDistance && distance < 200) {
+              closestDistance = distance;
+              closestLabel = label;
+            }
+          });
+          if (closestLabel) {
+            const text = (_d = closestLabel.textContent) == null ? void 0 : _d.trim();
+            if (text) return text;
           }
           return void 0;
         };

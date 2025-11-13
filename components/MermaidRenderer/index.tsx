@@ -301,21 +301,67 @@ export const MermaidVibes: React.FC<MermaidRendererProps> = ({
 
         // Helper to find the label for an edge
         const findEdgeLabel = (element: Element): string | undefined => {
-          // Try to find label in parent
-          const labelElement = element.parentElement?.querySelector('.edgeLabel text, .messageText');
-          if (labelElement?.textContent?.trim()) {
-            return labelElement.textContent.trim();
+          // Strategy 1: Look for label in the immediate parent element only
+          const immediateParent = element.parentElement;
+          if (immediateParent) {
+            // Check if the parent is a small group containing just this edge and its label
+            const labelsInParent = immediateParent.querySelectorAll('.edgeLabel text, .messageText');
+            const pathsInParent = immediateParent.querySelectorAll('path');
+
+            // If there's only one label and one path in this parent, they belong together
+            if (labelsInParent.length === 1 && pathsInParent.length === 1) {
+              const text = labelsInParent[0].textContent?.trim();
+              if (text) return text;
+            }
           }
 
-          // Try to find label in siblings
-          const parent = element.parentElement;
-          if (parent) {
-            const labels = parent.querySelectorAll('.edgeLabel text, .messageText');
-            for (const label of labels) {
-              if (label.textContent?.trim()) {
-                return label.textContent.trim();
+          // Strategy 2: Look for label in sibling elements at the same level
+          if (immediateParent) {
+            // Get all children of the parent
+            const siblings = Array.from(immediateParent.children);
+
+            // Find the index of the current element
+            const currentIndex = siblings.indexOf(element);
+
+            // Look for edge label siblings near this element (before or after)
+            for (let i = Math.max(0, currentIndex - 2); i < Math.min(siblings.length, currentIndex + 3); i++) {
+              const sibling = siblings[i];
+              if (sibling.classList.contains('edgeLabel')) {
+                const text = sibling.querySelector('text')?.textContent?.trim();
+                if (text) return text;
               }
             }
+          }
+
+          // Strategy 3: Find the closest edge label by position
+          const edgeBBox = element.getBoundingClientRect();
+          const allLabels = svgElement.querySelectorAll('.edgeLabel, .messageText');
+
+          let closestLabel: Element | null = null;
+          let closestDistance = Infinity;
+
+          allLabels.forEach((label) => {
+            const labelBBox = label.getBoundingClientRect();
+            // Calculate distance between edge and label centers
+            const edgeCenterX = edgeBBox.left + edgeBBox.width / 2;
+            const edgeCenterY = edgeBBox.top + edgeBBox.height / 2;
+            const labelCenterX = labelBBox.left + labelBBox.width / 2;
+            const labelCenterY = labelBBox.top + labelBBox.height / 2;
+
+            const distance = Math.sqrt(
+              Math.pow(edgeCenterX - labelCenterX, 2) +
+              Math.pow(edgeCenterY - labelCenterY, 2)
+            );
+
+            if (distance < closestDistance && distance < 200) { // Within 200px
+              closestDistance = distance;
+              closestLabel = label;
+            }
+          });
+
+          if (closestLabel) {
+            const text = closestLabel.textContent?.trim();
+            if (text) return text;
           }
 
           return undefined;

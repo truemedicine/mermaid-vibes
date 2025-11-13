@@ -64,9 +64,8 @@
   max-height: 100%;
   height: auto;
   width: 100%;
-  filter: drop-shadow(0 0 15px rgba(23, 152, 149, 0.15));
-  /* Prevent filter animations from causing layout shifts */
-  will-change: filter;
+  /* Filter removed - was causing polygon positioning issues */
+  /* filter: drop-shadow(0 0 15px rgba(23, 152, 149, 0.15)); */
 }
 
 /* ==========================================================================
@@ -80,15 +79,21 @@
   filter: drop-shadow(0 0 8px rgba(23, 152, 149, 0.2));
   animation: nodeGlow 4s ease-in-out infinite;
   transition: filter 0.2s ease;
-  /* Use GPU acceleration */
-  transform: translateZ(0);
-  will-change: auto;
+  will-change: filter;
 }
 
-/* Fix for diamond shapes (decision nodes) - prevent offset positioning */
-.node polygon.animated-node {
-  transform: none !important;
-  transform-origin: center center;
+/* Apply GPU acceleration only to non-polygon nodes */
+.node rect.animated-node,
+.node circle.animated-node,
+.node ellipse.animated-node {
+  transform: translateZ(0);
+}
+
+/* Diamond shapes (decision nodes) - keep filters and animations off */
+.node polygon.animated-node,
+polygon.animated-node {
+  filter: none !important;
+  animation: none !important;
 }
 
 .animated-node:hover {
@@ -120,7 +125,7 @@
   animation: edgePulse 3s ease-in-out infinite;
   /* Use GPU acceleration */
   transform: translateZ(0);
-  will-change: auto;
+  will-change: opacity;
 }
 
 @keyframes edgePulse {
@@ -222,22 +227,26 @@ marker {
 }
 
 /* Edge labels (Yes/No decision labels) */
-.edgeLabel {
+.edgeLabel,
+g.edgeLabel {
   background: transparent !important;
   border-radius: 0 !important;
   padding: 0 !important;
   border: none !important;
 }
 
-.edgeLabel rect {
+.edgeLabel rect,
+g.edgeLabel rect,
+.labelBkg {
   min-width: 80px !important;
   min-height: 45px !important;
   rx: 12px !important;
   ry: 12px !important;
-  fill: #F7F6F2 !important;
+  fill: #FFFFFF !important;
   stroke: none !important;
   stroke-width: 0 !important;
   filter: none !important;
+  opacity: 1 !important;
 }
 
 .edgeLabel text,
@@ -269,6 +278,7 @@ marker {
   stroke-linecap: butt !important;
   animation: edgePulse 3s ease-in-out infinite;
   transform: translateZ(0);
+  will-change: opacity;
 }
 
 /* Class diagram boxes */
@@ -329,6 +339,7 @@ marker {
   animation: edgePulse 3s ease-in-out infinite;
   filter: drop-shadow(0 0 6px rgba(23, 152, 149, 0.25));
   transform: translateZ(0);
+  will-change: opacity;
 }
 
 /* Sequence diagram message labels */

@@ -23,6 +23,11 @@ export const MERMAID_CONFIG: MermaidConfig = {
     nodeBorder: PRIMARY.teal,
     clusterBkg: ACCENT.cyanSoft,
     clusterBorder: PRIMARY.tealLight,
+    // Flowchart specific - edge labels
+    edgeLabelBackground: BACKGROUND.white,
+    labelBoxBorderColor: 'transparent',
+    labelBoxBkgColor: BACKGROUND.white,
+    labelTextColor: TEXT.body,
     // Sequence diagram specific
     actorBkg: BACKGROUND.white,
     actorBorder: PRIMARY.teal,
