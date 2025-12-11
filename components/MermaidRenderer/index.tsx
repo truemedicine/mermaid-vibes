@@ -360,7 +360,7 @@ export const MermaidVibes: React.FC<MermaidRendererProps> = ({
           });
 
           if (closestLabel) {
-            const text = closestLabel.textContent?.trim();
+            const text = (closestLabel as Element).textContent?.trim();
             if (text) return text;
           }
 

@@ -2,6 +2,11 @@
  * Type definitions for the Mermaid Renderer component
  */
 
+import type { MermaidConfig } from 'mermaid';
+
+// Re-export MermaidConfig from mermaid for use in other files
+export type { MermaidConfig };
+
 /**
  * Custom theme configuration for the renderer
  */
@@ -132,42 +137,3 @@ export interface ParticleStyle {
   };
 }
 
-/**
- * Mermaid initialization configuration
- */
-export interface MermaidConfig {
-  startOnLoad: boolean;
-  theme: string;
-  themeVariables: {
-    primaryColor: string;
-    primaryTextColor: string;
-    primaryBorderColor: string;
-    lineColor: string;
-    secondaryColor: string;
-    tertiaryColor: string;
-    background?: string;
-    mainBkg?: string;
-    nodeBorder?: string;
-    clusterBkg?: string;
-    clusterBorder?: string;
-    actorBkg?: string;
-    actorBorder?: string;
-    actorTextColor?: string;
-    actorLineColor?: string;
-    signalColor?: string;
-    signalTextColor?: string;
-  };
-  sequence?: {
-    diagramMarginX?: number;
-    diagramMarginY?: number;
-    actorMargin?: number;
-    width?: number;
-    height?: number;
-    boxMargin?: number;
-    boxTextMargin?: number;
-    noteMargin?: number;
-    messageMargin?: number;
-    mirrorActors?: boolean;
-    useMaxWidth?: boolean;
-  };
-}
