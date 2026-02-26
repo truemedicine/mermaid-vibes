@@ -40,61 +40,58 @@ export function enhanceLabels(svgElement: SVGSVGElement): void {
 }
 
 /**
- * Enforces minimum dimensions and rounded corners on edge label boxes
- * (e.g., "Yes" and "No" labels on decision branches)
+ * Enhances edge label boxes across all diagram types:
+ * - Flowcharts/state diagrams: Expands foreignObject so CSS padding isn't clipped
+ * - Sequence diagrams: Creates background rects for .messageText elements
  */
 export function enhanceEdgeLabelBoxes(svgElement: SVGSVGElement): void {
-  // Use multiple selectors to catch all edge label backgrounds
-  const selectors = [
-    '.edgeLabel rect',
-    'g.edgeLabel rect',
-    '.labelBkg',
-    'rect.labelBkg'
-  ];
+  const paddingX = 14;
+  const paddingY = 6;
+  const borderRadius = EDGE_LABEL_MIN_SIZE.borderRadius;
 
-  const allEdgeLabelRects: SVGRectElement[] = [];
-  selectors.forEach(selector => {
-    const rects = svgElement.querySelectorAll(selector);
-    rects.forEach(rect => {
-      if (!allEdgeLabelRects.includes(rect as SVGRectElement)) {
-        allEdgeLabelRects.push(rect as SVGRectElement);
-      }
-    });
+  // 1. Expand foreignObject elements inside edge labels so CSS padding isn't clipped
+  const foreignObjects = svgElement.querySelectorAll('g.edgeLabel foreignObject');
+  foreignObjects.forEach((fo) => {
+    const currentWidth = parseFloat(fo.getAttribute('width') || '0');
+    const currentHeight = parseFloat(fo.getAttribute('height') || '0');
+    const extraW = paddingX * 2 + 2; // padding + border
+    const extraH = paddingY * 2 + 2;
+    fo.setAttribute('width', (currentWidth + extraW).toString());
+    fo.setAttribute('height', (currentHeight + extraH).toString());
+    // Re-center by shifting position
+    const currentX = parseFloat(fo.getAttribute('x') || '0');
+    const currentY = parseFloat(fo.getAttribute('y') || '0');
+    fo.setAttribute('x', (currentX - extraW / 2).toString());
+    fo.setAttribute('y', (currentY - extraH / 2).toString());
+    (fo as SVGForeignObjectElement).style.overflow = 'visible';
   });
 
-  const { width: minWidth, height: minHeight, borderRadius } = EDGE_LABEL_MIN_SIZE;
+  // 2. Create background rects for sequence diagram message labels (.messageText)
+  const messageTexts = svgElement.querySelectorAll('.messageText');
+  messageTexts.forEach((textEl) => {
+    try {
+      // Skip if we already added a background
+      if (textEl.previousElementSibling?.classList.contains('message-label-bg')) return;
 
-  allEdgeLabelRects.forEach((rect) => {
-    const width = parseFloat(rect.getAttribute('width') || '0');
-    const height = parseFloat(rect.getAttribute('height') || '0');
+      const bbox = (textEl as SVGTextElement).getBBox();
+      if (bbox.width === 0 || bbox.height === 0) return;
 
-    // Add padding to the dimensions
-    const paddedMinWidth = minWidth + 20;
-    const paddedMinHeight = minHeight + 10;
+      const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      rect.setAttribute('x', (bbox.x - paddingX).toString());
+      rect.setAttribute('y', (bbox.y - paddingY).toString());
+      rect.setAttribute('width', (bbox.width + paddingX * 2).toString());
+      rect.setAttribute('height', (bbox.height + paddingY * 2).toString());
+      rect.setAttribute('rx', borderRadius.toString());
+      rect.setAttribute('ry', borderRadius.toString());
+      rect.setAttribute('fill', '#FFFFFF');
+      rect.setAttribute('stroke', '#D1D5DB');
+      rect.setAttribute('stroke-width', '1');
+      rect.classList.add('message-label-bg');
 
-    // Always enforce minimum width with padding
-    const newWidth = Math.max(width, paddedMinWidth);
-    if (newWidth !== width) {
-      rect.setAttribute('width', newWidth.toString());
-      const x = parseFloat(rect.getAttribute('x') || '0');
-      rect.setAttribute('x', (x - (newWidth - width) / 2).toString());
+      textEl.parentNode?.insertBefore(rect, textEl);
+    } catch {
+      // getBBox can throw if element isn't rendered yet
     }
-
-    // Always enforce minimum height with padding
-    const newHeight = Math.max(height, paddedMinHeight);
-    if (newHeight !== height) {
-      rect.setAttribute('height', newHeight.toString());
-      const y = parseFloat(rect.getAttribute('y') || '0');
-      rect.setAttribute('y', (y - (newHeight - height) / 2).toString());
-    }
-
-    // Add rounded corners and white background
-    rect.setAttribute('rx', borderRadius.toString());
-    rect.setAttribute('ry', borderRadius.toString());
-    rect.setAttribute('fill', '#FFFFFF');
-    rect.setAttribute('stroke', 'none');
-    rect.style.fill = '#FFFFFF';
-    rect.style.stroke = 'none';
   });
 }
 

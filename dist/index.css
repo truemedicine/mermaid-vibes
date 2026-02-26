@@ -185,25 +185,28 @@ marker {
     "Cantarell",
     sans-serif !important;
 }
-.edgeLabel,
-g.edgeLabel {
-  background: transparent !important;
-  border-radius: 0 !important;
-  padding: 0 !important;
-  border: none !important;
+span.edgeLabel,
+div.edgeLabel {
+  background: #FFFFFF !important;
+  border-radius: 10px !important;
+  padding: 6px 14px !important;
+  border: 1px solid #D1D5DB !important;
+  display: inline-block !important;
+}
+g.edgeLabel foreignObject {
+  overflow: visible !important;
 }
 .edgeLabel rect,
 g.edgeLabel rect,
 .labelBkg {
-  min-width: 80px !important;
-  min-height: 45px !important;
-  rx: 12px !important;
-  ry: 12px !important;
-  fill: #FFFFFF !important;
+  fill: none !important;
   stroke: none !important;
-  stroke-width: 0 !important;
-  filter: none !important;
-  opacity: 1 !important;
+  opacity: 0 !important;
+}
+.message-label-bg {
+  fill: #FFFFFF;
+  stroke: #D1D5DB;
+  stroke-width: 1;
 }
 .edgeLabel text,
 .edgeLabel * {
@@ -278,8 +281,12 @@ g.edgeLabel rect,
     "Cantarell",
     sans-serif !important;
 }
-.actor image {
-  border-radius: 8px;
+.actor-logo {
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.12)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.08));
+  transition: filter 0.2s ease;
+}
+.actor-logo:hover {
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.15)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 .messageLine0,
 .messageLine1,

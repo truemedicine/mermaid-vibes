@@ -100,11 +100,11 @@ var MERMAID_CONFIG = {
   sequence: {
     diagramMarginX: 100,
     diagramMarginY: 80,
-    actorMargin: 150,
-    width: 300,
+    actorMargin: 180,
+    width: 340,
     height: 120,
     boxMargin: 25,
-    boxTextMargin: 15,
+    boxTextMargin: 18,
     noteMargin: 25,
     messageMargin: 80,
     mirrorActors: true,
@@ -151,8 +151,6 @@ var MERMAID_SELECTORS = {
   ],
   edgeLabels: ".edgeLabel"};
 var EDGE_LABEL_MIN_SIZE = {
-  width: 90,
-  height: 50,
   borderRadius: 12
 };
 var DIAGRAM_ID = "mermaid-diagram";
@@ -180,45 +178,44 @@ function enhanceLabels(svgElement) {
   });
 }
 function enhanceEdgeLabelBoxes(svgElement) {
-  const selectors = [
-    ".edgeLabel rect",
-    "g.edgeLabel rect",
-    ".labelBkg",
-    "rect.labelBkg"
-  ];
-  const allEdgeLabelRects = [];
-  selectors.forEach((selector) => {
-    const rects = svgElement.querySelectorAll(selector);
-    rects.forEach((rect) => {
-      if (!allEdgeLabelRects.includes(rect)) {
-        allEdgeLabelRects.push(rect);
-      }
-    });
+  const paddingX = 14;
+  const paddingY = 6;
+  const borderRadius = EDGE_LABEL_MIN_SIZE.borderRadius;
+  const foreignObjects = svgElement.querySelectorAll("g.edgeLabel foreignObject");
+  foreignObjects.forEach((fo) => {
+    const currentWidth = parseFloat(fo.getAttribute("width") || "0");
+    const currentHeight = parseFloat(fo.getAttribute("height") || "0");
+    const extraW = paddingX * 2 + 2;
+    const extraH = paddingY * 2 + 2;
+    fo.setAttribute("width", (currentWidth + extraW).toString());
+    fo.setAttribute("height", (currentHeight + extraH).toString());
+    const currentX = parseFloat(fo.getAttribute("x") || "0");
+    const currentY = parseFloat(fo.getAttribute("y") || "0");
+    fo.setAttribute("x", (currentX - extraW / 2).toString());
+    fo.setAttribute("y", (currentY - extraH / 2).toString());
+    fo.style.overflow = "visible";
   });
-  const { width: minWidth, height: minHeight, borderRadius } = EDGE_LABEL_MIN_SIZE;
-  allEdgeLabelRects.forEach((rect) => {
-    const width = parseFloat(rect.getAttribute("width") || "0");
-    const height = parseFloat(rect.getAttribute("height") || "0");
-    const paddedMinWidth = minWidth + 20;
-    const paddedMinHeight = minHeight + 10;
-    const newWidth = Math.max(width, paddedMinWidth);
-    if (newWidth !== width) {
-      rect.setAttribute("width", newWidth.toString());
-      const x = parseFloat(rect.getAttribute("x") || "0");
-      rect.setAttribute("x", (x - (newWidth - width) / 2).toString());
+  const messageTexts = svgElement.querySelectorAll(".messageText");
+  messageTexts.forEach((textEl) => {
+    var _a, _b;
+    try {
+      if ((_a = textEl.previousElementSibling) == null ? void 0 : _a.classList.contains("message-label-bg")) return;
+      const bbox = textEl.getBBox();
+      if (bbox.width === 0 || bbox.height === 0) return;
+      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      rect.setAttribute("x", (bbox.x - paddingX).toString());
+      rect.setAttribute("y", (bbox.y - paddingY).toString());
+      rect.setAttribute("width", (bbox.width + paddingX * 2).toString());
+      rect.setAttribute("height", (bbox.height + paddingY * 2).toString());
+      rect.setAttribute("rx", borderRadius.toString());
+      rect.setAttribute("ry", borderRadius.toString());
+      rect.setAttribute("fill", "#FFFFFF");
+      rect.setAttribute("stroke", "#D1D5DB");
+      rect.setAttribute("stroke-width", "1");
+      rect.classList.add("message-label-bg");
+      (_b = textEl.parentNode) == null ? void 0 : _b.insertBefore(rect, textEl);
+    } catch (e) {
     }
-    const newHeight = Math.max(height, paddedMinHeight);
-    if (newHeight !== height) {
-      rect.setAttribute("height", newHeight.toString());
-      const y = parseFloat(rect.getAttribute("y") || "0");
-      rect.setAttribute("y", (y - (newHeight - height) / 2).toString());
-    }
-    rect.setAttribute("rx", borderRadius.toString());
-    rect.setAttribute("ry", borderRadius.toString());
-    rect.setAttribute("fill", "#FFFFFF");
-    rect.setAttribute("stroke", "none");
-    rect.style.fill = "#FFFFFF";
-    rect.style.stroke = "none";
   });
 }
 function findEdgePaths(svgElement) {
@@ -625,12 +622,26 @@ function addActorImages(svgElement, imageMappings) {
     if (imgPath) {
       const x = parseFloat(rect.getAttribute("x") || "0");
       const y = parseFloat(rect.getAttribute("y") || "0");
+      const width = parseFloat(rect.getAttribute("width") || "0");
       const height = parseFloat(rect.getAttribute("height") || "0");
-      const logoSize = 48;
-      const padding = 20;
-      const imageX = x + padding;
+      const logoSize = Math.max(32, Math.min(Math.round(height * 0.6), 64));
+      const logoBorderRadius = Math.round(logoSize * 0.14);
+      const sidePadding = 18;
+      const logoTextGap = 14;
+      let textWidth;
+      try {
+        const textBBox = textElement.getBBox();
+        textWidth = textBBox.width;
+      } catch (e) {
+        textWidth = actorName.length * 13;
+      }
+      const contentWidth = logoSize + logoTextGap + textWidth;
+      const contentStartX = Math.max(
+        x + sidePadding,
+        x + (width - contentWidth) / 2
+      );
+      const imageX = contentStartX;
       const imageY = y + (height - logoSize) / 2;
-      const borderRadius = 8;
       const clipPathId = `actor-logo-clip-${Math.random().toString(36).substr(2, 9)}`;
       const defs = svgElement.querySelector("defs") || svgElement.insertBefore(
         document.createElementNS("http://www.w3.org/2000/svg", "defs"),
@@ -643,8 +654,8 @@ function addActorImages(svgElement, imageMappings) {
       clipRect.setAttribute("y", imageY.toString());
       clipRect.setAttribute("width", logoSize.toString());
       clipRect.setAttribute("height", logoSize.toString());
-      clipRect.setAttribute("rx", borderRadius.toString());
-      clipRect.setAttribute("ry", borderRadius.toString());
+      clipRect.setAttribute("rx", logoBorderRadius.toString());
+      clipRect.setAttribute("ry", logoBorderRadius.toString());
       clipPath.appendChild(clipRect);
       defs.appendChild(clipPath);
       const image = document.createElementNS("http://www.w3.org/2000/svg", "image");
@@ -655,10 +666,17 @@ function addActorImages(svgElement, imageMappings) {
       image.setAttribute("height", logoSize.toString());
       image.setAttribute("class", "actor-logo");
       image.setAttribute("clip-path", `url(#${clipPathId})`);
-      const textX = parseFloat(textElement.getAttribute("x") || "0");
-      const textShift = logoSize + 4;
-      textElement.setAttribute("x", (textX + textShift / 2).toString());
-      actor.appendChild(image);
+      image.setAttribute("preserveAspectRatio", "xMidYMid slice");
+      const textAreaLeft = imageX + logoSize + logoTextGap;
+      const newTextX = textAreaLeft + textWidth / 2;
+      textElement.setAttribute("x", newTextX.toString());
+      const tspans = textElement.querySelectorAll("tspan");
+      tspans.forEach((tspan) => {
+        if (tspan.hasAttribute("x")) {
+          tspan.setAttribute("x", newTextX.toString());
+        }
+      });
+      actor.insertBefore(image, textElement);
     }
   });
 }
