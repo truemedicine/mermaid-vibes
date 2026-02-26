@@ -241,13 +241,17 @@ g.edgeLabel foreignObject {
   overflow: visible !important;
 }
 
-/* Hide SVG background rects inside edge labels — the HTML element handles the background */
+/* Style SVG background rects in edge labels (used by state diagrams, etc.) */
 .edgeLabel rect,
 g.edgeLabel rect,
 g.edgeLabel .labelBkg {
-  fill: none !important;
-  stroke: none !important;
-  opacity: 0 !important;
+  fill: #FFFFFF !important;
+  stroke: #D1D5DB !important;
+  stroke-width: 1 !important;
+  rx: 10 !important;
+  ry: 10 !important;
+  opacity: 1 !important;
+  filter: none !important;
 }
 
 /* Sequence diagram message label backgrounds (inserted by JS) */

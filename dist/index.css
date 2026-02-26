@@ -199,9 +199,13 @@ g.edgeLabel foreignObject {
 .edgeLabel rect,
 g.edgeLabel rect,
 g.edgeLabel .labelBkg {
-  fill: none !important;
-  stroke: none !important;
-  opacity: 0 !important;
+  fill: #FFFFFF !important;
+  stroke: #D1D5DB !important;
+  stroke-width: 1 !important;
+  rx: 10 !important;
+  ry: 10 !important;
+  opacity: 1 !important;
+  filter: none !important;
 }
 .message-label-bg {
   fill: #FFFFFF;

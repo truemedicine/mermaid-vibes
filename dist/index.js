@@ -181,19 +181,40 @@ function enhanceEdgeLabelBoxes(svgElement) {
   const paddingX = 14;
   const paddingY = 6;
   const borderRadius = EDGE_LABEL_MIN_SIZE.borderRadius;
-  const foreignObjects = svgElement.querySelectorAll("g.edgeLabel foreignObject");
-  foreignObjects.forEach((fo) => {
-    const currentWidth = parseFloat(fo.getAttribute("width") || "0");
-    const currentHeight = parseFloat(fo.getAttribute("height") || "0");
-    const extraW = paddingX * 2 + 2;
-    const extraH = paddingY * 2 + 2;
-    fo.setAttribute("width", (currentWidth + extraW).toString());
-    fo.setAttribute("height", (currentHeight + extraH).toString());
-    const currentX = parseFloat(fo.getAttribute("x") || "0");
-    const currentY = parseFloat(fo.getAttribute("y") || "0");
-    fo.setAttribute("x", (currentX - extraW / 2).toString());
-    fo.setAttribute("y", (currentY - extraH / 2).toString());
-    fo.style.overflow = "visible";
+  const edgeLabelGroups = svgElement.querySelectorAll("g.edgeLabel");
+  edgeLabelGroups.forEach((group) => {
+    const fo = group.querySelector("foreignObject");
+    const rect = group.querySelector("rect");
+    if (fo) {
+      if (rect) {
+        rect.style.opacity = "0";
+      }
+      const currentWidth = parseFloat(fo.getAttribute("width") || "0");
+      const currentHeight = parseFloat(fo.getAttribute("height") || "0");
+      const extraW = paddingX * 2 + 2;
+      const extraH = paddingY * 2 + 2;
+      fo.setAttribute("width", (currentWidth + extraW).toString());
+      fo.setAttribute("height", (currentHeight + extraH).toString());
+      const currentX = parseFloat(fo.getAttribute("x") || "0");
+      const currentY = parseFloat(fo.getAttribute("y") || "0");
+      fo.setAttribute("x", (currentX - extraW / 2).toString());
+      fo.setAttribute("y", (currentY - extraH / 2).toString());
+      fo.style.overflow = "visible";
+    } else if (rect) {
+      const width = parseFloat(rect.getAttribute("width") || "0");
+      const height = parseFloat(rect.getAttribute("height") || "0");
+      rect.setAttribute("width", (width + paddingX * 2).toString());
+      rect.setAttribute("height", (height + paddingY * 2).toString());
+      const x = parseFloat(rect.getAttribute("x") || "0");
+      const y = parseFloat(rect.getAttribute("y") || "0");
+      rect.setAttribute("x", (x - paddingX).toString());
+      rect.setAttribute("y", (y - paddingY).toString());
+      rect.setAttribute("rx", borderRadius.toString());
+      rect.setAttribute("ry", borderRadius.toString());
+      rect.setAttribute("fill", "#FFFFFF");
+      rect.setAttribute("stroke", "#D1D5DB");
+      rect.setAttribute("stroke-width", "1");
+    }
   });
   const messageTexts = svgElement.querySelectorAll(".messageText");
   messageTexts.forEach((textEl) => {
