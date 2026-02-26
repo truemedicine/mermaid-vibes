@@ -52,7 +52,9 @@ function preprocessChart(chart: string): { cleanedChart: string; imageMappings: 
 }
 
 /**
- * Adds images to actor boxes based on mappings
+ * Adds images to actor boxes based on mappings.
+ * Properly sizes logos proportionally to the actor box, centers the logo+text
+ * combination as a unit, and applies appropriate spacing and padding.
  */
 function addActorImages(svgElement: SVGSVGElement, imageMappings: Map<string, string>): void {
   if (imageMappings.size === 0) {
@@ -70,9 +72,7 @@ function addActorImages(svgElement: SVGSVGElement, imageMappings: Map<string, st
   });
 
   actorCandidates.forEach((actor) => {
-    // Look for text anywhere in the actor (not just direct children)
-    const textElement = actor.querySelector('text');
-    // Look for rect anywhere in the actor
+    const textElement = actor.querySelector('text') as SVGTextElement | null;
     const rect = actor.querySelector('rect');
 
     if (!textElement || !rect) {
@@ -83,16 +83,40 @@ function addActorImages(svgElement: SVGSVGElement, imageMappings: Map<string, st
     const imgPath = imageMappings.get(actorName);
 
     if (imgPath) {
-      // Get the rect dimensions and position
       const x = parseFloat(rect.getAttribute('x') || '0');
       const y = parseFloat(rect.getAttribute('y') || '0');
+      const width = parseFloat(rect.getAttribute('width') || '0');
       const height = parseFloat(rect.getAttribute('height') || '0');
 
-      const logoSize = 48;
-      const padding = 20;
-      const imageX = x + padding;
+      // Scale logo proportionally to actor box height (60%, capped at 64px, min 32px)
+      const logoSize = Math.max(32, Math.min(Math.round(height * 0.6), 64));
+      const logoBorderRadius = Math.round(logoSize * 0.14);
+
+      // Spacing constants
+      const sidePadding = 18;
+      const logoTextGap = 14;
+
+      // Measure text width for proper centering of the logo+text unit
+      let textWidth: number;
+      try {
+        const textBBox = textElement.getBBox();
+        textWidth = textBBox.width;
+      } catch {
+        textWidth = actorName.length * 13; // Fallback estimate
+      }
+
+      // Total content width: logo + gap + text
+      const contentWidth = logoSize + logoTextGap + textWidth;
+
+      // Center the logo+text unit within the actor box, with minimum side padding
+      const contentStartX = Math.max(
+        x + sidePadding,
+        x + (width - contentWidth) / 2
+      );
+
+      // Position logo at the start of the centered content area
+      const imageX = contentStartX;
       const imageY = y + (height - logoSize) / 2;
-      const borderRadius = 8;
 
       // Create a unique ID for this clip path
       const clipPathId = `actor-logo-clip-${Math.random().toString(36).substr(2, 9)}`;
@@ -111,8 +135,8 @@ function addActorImages(svgElement: SVGSVGElement, imageMappings: Map<string, st
       clipRect.setAttribute('y', imageY.toString());
       clipRect.setAttribute('width', logoSize.toString());
       clipRect.setAttribute('height', logoSize.toString());
-      clipRect.setAttribute('rx', borderRadius.toString());
-      clipRect.setAttribute('ry', borderRadius.toString());
+      clipRect.setAttribute('rx', logoBorderRadius.toString());
+      clipRect.setAttribute('ry', logoBorderRadius.toString());
 
       clipPath.appendChild(clipRect);
       defs.appendChild(clipPath);
@@ -126,14 +150,24 @@ function addActorImages(svgElement: SVGSVGElement, imageMappings: Map<string, st
       image.setAttribute('height', logoSize.toString());
       image.setAttribute('class', 'actor-logo');
       image.setAttribute('clip-path', `url(#${clipPathId})`);
+      image.setAttribute('preserveAspectRatio', 'xMidYMid slice');
 
-      // Adjust text position to make room for logo (tighter spacing)
-      const textX = parseFloat(textElement.getAttribute('x') || '0');
-      const textShift = logoSize + 4; // Logo width plus 4px gap
-      textElement.setAttribute('x', (textX + textShift / 2).toString());
+      // Position text centered in the space to the right of the logo
+      const textAreaLeft = imageX + logoSize + logoTextGap;
+      const newTextX = textAreaLeft + textWidth / 2;
 
-      // Insert the image into the actor group
-      actor.appendChild(image);
+      textElement.setAttribute('x', newTextX.toString());
+
+      // Also update any tspan elements that have explicit x positions
+      const tspans = textElement.querySelectorAll('tspan');
+      tspans.forEach(tspan => {
+        if (tspan.hasAttribute('x')) {
+          tspan.setAttribute('x', newTextX.toString());
+        }
+      });
+
+      // Insert image before text for proper z-ordering
+      actor.insertBefore(image, textElement);
     }
   });
 }
@@ -337,7 +371,7 @@ export const MermaidVibes: React.FC<MermaidRendererProps> = ({
           const edgeBBox = element.getBoundingClientRect();
           const allLabels = svgElement.querySelectorAll('.edgeLabel, .messageText');
 
-          let closestLabel: Element | null = null;
+          let closestLabel: Element | null = null as Element | null;
           let closestDistance = Infinity;
 
           allLabels.forEach((label) => {
