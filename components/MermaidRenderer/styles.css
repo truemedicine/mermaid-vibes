@@ -241,10 +241,10 @@ g.edgeLabel foreignObject {
   overflow: visible !important;
 }
 
-/* Hide SVG background rects — the HTML element handles the background */
+/* Hide SVG background rects inside edge labels — the HTML element handles the background */
 .edgeLabel rect,
 g.edgeLabel rect,
-.labelBkg {
+g.edgeLabel .labelBkg {
   fill: none !important;
   stroke: none !important;
   opacity: 0 !important;

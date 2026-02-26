@@ -198,7 +198,7 @@ g.edgeLabel foreignObject {
 }
 .edgeLabel rect,
 g.edgeLabel rect,
-.labelBkg {
+g.edgeLabel .labelBkg {
   fill: none !important;
   stroke: none !important;
   opacity: 0 !important;
